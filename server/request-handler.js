@@ -3,6 +3,7 @@
  * basic-server.js.  So you must figure out how to export the function
  * from this file and include it in basic-server.js. Check out the
  * node module documentation at http://nodejs.org/api/modules.html. */
+var _results = [];
 
 exports.handleRequest = function(request, response) {
   /* This is the callback function that will be called each time a
@@ -12,7 +13,7 @@ exports.handleRequest = function(request, response) {
    * about the client request - such as what URL the browser is
    * requesting. */
   console.log("Serving request type " + request.method + " for url " + request.url);
-  if(request.url === "/1/classes/chatterbox"){
+  if(request.url === "/classes/chatterbox"){
     /* "Status code" and "headers" are HTTP concepts that you can
      * research on the web as and when it becomes necessary. */
     var statusCode = 200;
@@ -37,7 +38,17 @@ exports.handleRequest = function(request, response) {
      * anything back to the client until you do. The string you pass to
      * response.end() will be the body of the response - i.e. what shows
      * up in the browser.*/
-    response.end("Hello, World!! " + request.url);
+
+    if(request.method === "GET"){
+      response.end(JSON.stringify({results: _results}));
+    }else if(request.method === "POST"){
+      request.on("data", function(data){
+        _results.push(JSON.parse(data));
+      });
+      response.end("POST request successful!");
+    }else{
+      response.end("You got the URL right! Please send a GET or POST request.");
+    }
   }else{
     response.end("URL not recognized.");
   }
