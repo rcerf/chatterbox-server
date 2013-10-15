@@ -1,3 +1,15 @@
+/* These headers will allow Cross-Origin Resource Sharing.
+ * This CRUCIAL code allows this server to talk to websites that
+ * are on different domains. (Your chat client is running from a url
+ * like file://your/chat/client/index.html, which is considered a
+ * different domain.) */
+var defaultCorsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+  "access-control-allow-headers": "content-type, accept",
+  "access-control-max-age": 10 // Seconds.
+};
+
 /* You should implement your request handler function in this file.
  * But you need to pass the function to http.createServer() in
  * basic-server.js.  So you must figure out how to export the function
@@ -8,21 +20,20 @@ var _results = [];
 
 exports.handleRequest = function(request, response) {
   var statusCode;
-  var server = require('./basic-server.js');
-  var headers = server.defaultCorsHeaders;
+  var headers = defaultCorsHeaders;
 
   console.log("Serving request type " + request.method + " for url " + request.url);
   var parsedUrl = request.url.split('/');
-  if(parsedUrl[3] === "classes"){
-    headers['Content-Type'] = "text/plain";
+  if(parsedUrl[1] === "classes"){
 
     if(request.method === "GET"){
       statusCode = 200;
+      headers['Content-Type'] = "application/json";
       response.writeHead(statusCode, headers);
-      if(parsedUrl[4] === "messages"){
+      if(parsedUrl[2] === "messages"){
         response.end(JSON.stringify( _results ));
-      }else if(typeof parsedUrl[4] === "string"){
-        var roomName = parsedUrl[4];
+      }else if(typeof parsedUrl[2] === "string"){
+        var roomName = parsedUrl[2];
         var filteredMessages = _underscore.filter(_results, function(data){
           return data.roomname === roomName;
         });
@@ -30,13 +41,17 @@ exports.handleRequest = function(request, response) {
       }
     }else if(request.method === "POST"){
       statusCode = 201;
+      headers['Content-Type'] = "text/plain";
       response.writeHead(statusCode, headers);
       request.on("data", function(data){
         _results.push(JSON.parse(data));
       });
       response.end("POST request successful!");
     }else{
-      response.end("You got the URL right! Please send a GET or POST request.");
+      statusCode = 200;
+      headers['Content-Type'] = "text/plain";
+      response.writeHead(statusCode, headers);
+      response.end("400 - Bad request");
     }
   }else{
     //  Return 404 status code
@@ -47,3 +62,6 @@ exports.handleRequest = function(request, response) {
     response.end("404 - File Not Found");
   }
 };
+
+
+
