@@ -53,7 +53,8 @@ describe("Node Server Request Listener Function", function() {
    var req = new StubRequest("http://127.0.0.1:8080/classes/room1",
                              "POST",
                             {username: "Jono",
-                             message: "Do my bidding!"});
+                             message: "Do my bidding!",
+                             roomname: "room1"});
    var res = new StubResponse();
 
    handler.handleRequest(req, res);
@@ -75,6 +76,7 @@ describe("Node Server Request Listener Function", function() {
    handler.handleRequest(req, res);
 
    expect(res._responseCode).toEqual(200);
+   console.log("RETURNED DATA: " + res._data);
    var messageLog = JSON.parse(res._data);
    expect(messageLog.length).toEqual(1);
    expect(messageLog[0].username).toEqual("Jono");
