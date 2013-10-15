@@ -15,6 +15,7 @@ var defaultCorsHeaders = {
  * basic-server.js.  So you must figure out how to export the function
  * from this file and include it in basic-server.js. Check out the
  * node module documentation at http://nodejs.org/api/modules.html. */
+var fs = require("fs");
 var _underscore = require("../node_modules/underscore/underscore-min.js");
 var _results = [];
 
@@ -24,7 +25,19 @@ exports.handleRequest = function(request, response) {
 
   console.log("Serving request type " + request.method + " for url " + request.url);
   var parsedUrl = request.url.split('/');
-  if(parsedUrl[1] === "classes"){
+  if(parsedUrl[0].length === 0 && parsedUrl[1].length === 0){
+    //["", ""]
+    fs.readFile('../client/client/index.html', function(err, html){
+      if (err) {
+        throw err;
+      }
+      statusCode = 200;
+      headers['Content-Type'] = "text/html";
+      response.writeHead(statusCode, headers);
+      response.write(html);
+      response.end();
+    });
+  }else if(parsedUrl[1] === "classes"){
 
     if(request.method === "GET"){
       statusCode = 200;
