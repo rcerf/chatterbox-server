@@ -3,45 +3,34 @@
  * basic-server.js.  So you must figure out how to export the function
  * from this file and include it in basic-server.js. Check out the
  * node module documentation at http://nodejs.org/api/modules.html. */
+var _underscore = require("../node_modules/underscore/underscore-min.js");
 var _results = [];
 
 exports.handleRequest = function(request, response) {
-  /* This is the callback function that will be called each time a
- * client (i.e.. a web browser) makes a request to our server. */
+  var statusCode;
+  var server = require('./basic-server.js');
+  var headers = server.defaultCorsHeaders;
 
-  /* Request is an http.ServerRequest object containing various data
-   * about the client request - such as what URL the browser is
-   * requesting. */
   console.log("Serving request type " + request.method + " for url " + request.url);
-  if(request.url === "/classes/chatterbox"){
-    /* "Status code" and "headers" are HTTP concepts that you can
-     * research on the web as and when it becomes necessary. */
-    var statusCode = 200;
-
-    var server = require('./basic-server.js');
-
-    /* Without this line, this server wouldn't work.  See the note
-     * below about CORS. */
-    var headers = server.defaultCorsHeaders;
-
+  var parsedUrl = request.url.split('/');
+  if(parsedUrl[3] === "classes"){
     headers['Content-Type'] = "text/plain";
 
-    /* Response is an http.ServerRespone object containing methods for
-     * writing our response to the client. Documentation for both request
-     * and response can be found at
-     * http://nodemanual.org/0.8.14/nodejs_ref_guide/http.html*/
-    response.writeHead(statusCode, headers);
-    /* .writeHead() tells our server what HTTP status code to send back
-     * to the client, and what headers to include on the response. */
-
-    /* Make sure to always call response.end() - Node will not send
-     * anything back to the client until you do. The string you pass to
-     * response.end() will be the body of the response - i.e. what shows
-     * up in the browser.*/
-
     if(request.method === "GET"){
-      response.end(JSON.stringify({results: _results}));
+      statusCode = 200;
+      response.writeHead(statusCode, headers);
+      if(parsedUrl[4] === "messages"){
+        response.end(JSON.stringify( _results ));
+      }else if(typeof parsedUrl[4] === "string"){
+        var roomName = parsedUrl[4];
+        var filteredMessages = _underscore.filter(_results, function(data){
+          return data.roomname === roomName;
+        });
+        response.end(JSON.stringify(filteredMessages));
+      }
     }else if(request.method === "POST"){
+      statusCode = 201;
+      response.writeHead(statusCode, headers);
       request.on("data", function(data){
         _results.push(JSON.parse(data));
       });
@@ -50,6 +39,11 @@ exports.handleRequest = function(request, response) {
       response.end("You got the URL right! Please send a GET or POST request.");
     }
   }else{
-    response.end("URL not recognized.");
+    //  Return 404 status code
+    statusCode = 404;
+    headers['Content-Type'] = "text/plain";
+    response.writeHead(statusCode, headers);
+
+    response.end("404 - File Not Found");
   }
 };
